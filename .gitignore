@@ -1,0 +1,14 @@
+BtWQuests/
+BtWQuests-v2.56.1-mists/
+BtWQuestsCataclysm/
+BtWQuestsMistsOfPandaria/
+BtWQuestsTheBurningCrusade/
+BtWQuestsWrathOfTheLichKing/
+classicBtWQuests/
+classicBtWQuestsMistsOfPandaria/
+
+release/*
+!release/*.zip
+
+.DS_Store
+Thumbs.db

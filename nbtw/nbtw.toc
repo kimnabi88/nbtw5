@@ -1,0 +1,105 @@
+## Interface: 50400
+## Title: 나비퀘스트추적기
+## Version: 0.1.0-mop548
+## Notes: nbtw Pandaria 5.4.8 quest tracker
+## Author: made by kimnabi88
+## SavedVariables: BtWQuests_Characters BtWQuests_AccountSettings
+## SavedVariablesPerCharacter: BtWQuests_Settings BtWQuests_AutoLoad
+## IconTexture: Interface\QuestFrame\UI-QuestLog-BookIcon
+## Category-enUS: Quests
+## Category-deDE: Quests
+## Category-esES: Misiones
+## Category-esMX: Misiones
+## Category-frFR: Quêtes
+## Category-itIT: Missioni
+## Category-koKR: 퀘스트
+## Category-ptBR: Missões
+## Category-ruRU: Задания
+## Category-zhCN: 任务
+## Category-zhTW: 任務
+
+Defines.lua
+nbtwCharacters.lua
+nbtwDatabase.lua
+
+Localization.lua
+Localization.deDE.lua
+Localization.esES.lua
+Localization.esMX.lua
+Localization.frFR.lua
+Localization.itIT.lua
+Localization.koKR.lua
+Localization.ptBR.lua
+Localization.ruRU.lua
+Localization.zhCN.lua
+Localization.zhTW.lua
+
+nbtwTemplates.xml
+nbtw.xml
+nbtwQuestDataProvider.xml
+nbtwQuestPOIDataProvider.xml
+nbtwGuideDataProvider.xml
+nbtwMinimapButton.xml
+LibMapPinHandler.lua
+
+# Mists of Pandaria data
+
+MistsOfPandaria/Defines.lua
+
+MistsOfPandaria/Localization.lua
+
+MistsOfPandaria/Database/Quests.lua
+MistsOfPandaria/Database/Quests.deDE.lua
+MistsOfPandaria/Database/Quests.esES.lua
+MistsOfPandaria/Database/Quests.esMX.lua
+MistsOfPandaria/Database/Quests.frFR.lua
+MistsOfPandaria/Database/Quests.itIT.lua
+MistsOfPandaria/Database/Quests.koKR.lua
+MistsOfPandaria/Database/Quests.ptBR.lua
+MistsOfPandaria/Database/Quests.ruRU.lua
+MistsOfPandaria/Database/Quests.zhCN.lua
+MistsOfPandaria/Database/Quests.zhTW.lua
+
+MistsOfPandaria/Database/NPCs.lua
+MistsOfPandaria/Database/NPCs.deDE.lua
+MistsOfPandaria/Database/NPCs.esES.lua
+MistsOfPandaria/Database/NPCs.esMX.lua
+MistsOfPandaria/Database/NPCs.frFR.lua
+MistsOfPandaria/Database/NPCs.itIT.lua
+MistsOfPandaria/Database/NPCs.koKR.lua
+MistsOfPandaria/Database/NPCs.ptBR.lua
+MistsOfPandaria/Database/NPCs.ruRU.lua
+MistsOfPandaria/Database/NPCs.zhCN.lua
+MistsOfPandaria/Database/NPCs.zhTW.lua
+
+MistsOfPandaria/Database/Objects.lua
+MistsOfPandaria/Database/Objects.deDE.lua
+MistsOfPandaria/Database/Objects.esES.lua
+MistsOfPandaria/Database/Objects.esMX.lua
+MistsOfPandaria/Database/Objects.frFR.lua
+MistsOfPandaria/Database/Objects.itIT.lua
+MistsOfPandaria/Database/Objects.koKR.lua
+MistsOfPandaria/Database/Objects.ptBR.lua
+MistsOfPandaria/Database/Objects.ruRU.lua
+MistsOfPandaria/Database/Objects.zhCN.lua
+MistsOfPandaria/Database/Objects.zhTW.lua
+
+MistsOfPandaria/Database/Index.enUS.lua
+MistsOfPandaria/Database/Index.deDE.lua
+MistsOfPandaria/Database/Index.esES.lua
+MistsOfPandaria/Database/Index.esMX.lua
+MistsOfPandaria/Database/Index.frFR.lua
+MistsOfPandaria/Database/Index.itIT.lua
+MistsOfPandaria/Database/Index.koKR.lua
+MistsOfPandaria/Database/Index.ptBR.lua
+MistsOfPandaria/Database/Index.ruRU.lua
+MistsOfPandaria/Database/Index.zhCN.lua
+MistsOfPandaria/Database/Index.zhTW.lua
+
+MistsOfPandaria/TheJadeForest.lua
+MistsOfPandaria/ValleyOfTheFourWinds.lua
+MistsOfPandaria/KrasarangWilds.lua
+MistsOfPandaria/KunLaiSummit.lua
+MistsOfPandaria/TownlongSteppes.lua
+MistsOfPandaria/DreadWastes.lua
+# End Mists of Pandaria data
