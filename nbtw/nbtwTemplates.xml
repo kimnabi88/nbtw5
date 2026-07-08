@@ -22,33 +22,33 @@
 		<Color r="1" g=".82" b="0"/>
 	</Font>
 
-	<Texture name="UI-BtWQuests-Expansion-Base" file="Interface\Addons\nbtw\UI-Expansion" virtual="true">
+	<Texture name="UI-BtWQuests-Expansion-Base" file="Interface\Buttons\WHITE8X8" virtual="true">
 		<Size x="232" y="416"/>
 		<TexCoords left="0.20703125" right="0.43359375" top="0.0" bottom="0.8125"/>
 	</Texture>
-	<Texture name="UI-BtWQuests-Expansion-Background" file="Interface\Addons\nbtw\UI-Expansion" virtual="true">
+	<Texture name="UI-BtWQuests-Expansion-Background" file="Interface\Buttons\WHITE8X8" virtual="true">
 		<Size x="232" y="416"/>
 		<TexCoords left="0.43359375" right="0.66015625" top="0.0" bottom="0.8125"/>
 	</Texture>
 
-	<Texture name="UI-BtWQuests-ExpansionMediumButton-Base" file="Interface\Addons\nbtw\UI-Expansion" virtual="true">
+	<Texture name="UI-BtWQuests-ExpansionMediumButton-Base" file="Interface\Buttons\WHITE8X8" virtual="true">
 		<Size x="232" y="416"/>
 		<TexCoords left="0.0" right="0.20703125" top="0.0" bottom="0.13671875"/>
 	</Texture>
-	<Texture name="UI-BtWQuests-ExpansionMediumButton-Active" file="Interface\Addons\nbtw\UI-Expansion" virtual="true">
+	<Texture name="UI-BtWQuests-ExpansionMediumButton-Active" file="Interface\Buttons\WHITE8X8" virtual="true">
 		<Size x="232" y="416"/>
 		<TexCoords left="0.0" right="0.20703125" top="0.13671875" bottom="0.2734375"/>
 	</Texture>
-	<Texture name="UI-BtWQuests-ExpansionMediumButton-Highlight" file="Interface\Addons\nbtw\UI-Expansion" virtual="true">
+	<Texture name="UI-BtWQuests-ExpansionMediumButton-Highlight" file="Interface\Buttons\WHITE8X8" virtual="true">
 		<Size x="232" y="416"/>
 		<TexCoords left="0.0" right="0.20703125" top="0.2734375" bottom="0.41015625"/>
 	</Texture>
 	
-	<Texture name="UI-BtWQuests-ExpansionSmallButton-Base" file="Interface\Addons\nbtw\UI-Expansion" virtual="true">
+	<Texture name="UI-BtWQuests-ExpansionSmallButton-Base" file="Interface\Buttons\WHITE8X8" virtual="true">
 		<Size x="232" y="416"/>
 		<TexCoords left="0.0" right="0.20703125" top="0.41015625" bottom="0.48828125"/>
 	</Texture>
-	<Texture name="UI-BtWQuests-ExpansionSmallButton-Highlight" file="Interface\Addons\nbtw\UI-Expansion" virtual="true">
+	<Texture name="UI-BtWQuests-ExpansionSmallButton-Highlight" file="Interface\Buttons\WHITE8X8" virtual="true">
 		<Size x="232" y="416"/>
 		<TexCoords left="0.0" right="0.20703125" top="0.48828125" bottom="0.56640625"/>
 	</Texture>

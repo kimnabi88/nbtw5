@@ -1,3 +1,38 @@
+if type(Mixin) ~= "function" then
+    function Mixin(object, ...)
+        object = object or {}
+        for index = 1, select("#", ...) do
+            local mixin = select(index, ...)
+            if type(mixin) == "table" then
+                for key, value in pairs(mixin) do
+                    object[key] = value
+                end
+            end
+        end
+        return object
+    end
+end
+
+if type(CreateFromMixins) ~= "function" then
+    function CreateFromMixins(...)
+        return Mixin({}, ...)
+    end
+end
+
+Enum = Enum or {}
+Enum.QuestTag = Enum.QuestTag or {
+    Group = QUEST_TAG_GROUP or 1,
+    Pvp = QUEST_TAG_PVP or 41,
+    Raid = QUEST_TAG_RAID or 62,
+    Dungeon = QUEST_TAG_DUNGEON or 81,
+    Legendary = QUEST_TAG_LEGENDARY or 83,
+    Heroic = QUEST_TAG_HEROIC or 85,
+    Raid10 = QUEST_TAG_RAID10 or 88,
+    Raid25 = QUEST_TAG_RAID25 or 89,
+    Scenario = QUEST_TAG_SCENARIO or 98,
+    Account = QUEST_TAG_ACCOUNT or 102,
+}
+
 BtWQuests = {
     Constant = {
         Expansions = {

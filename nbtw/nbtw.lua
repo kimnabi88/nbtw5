@@ -6,6 +6,19 @@ local BtWQuestsCharacters = BtWQuestsCharacters
 local L = BtWQuests.L;
 
 local INTERFACE_NUMBER = select(4, GetBuildInfo())
+local NBTW_MOP_EXPANSION_ID = BtWQuests.Constant.Expansions.MistsOfPandaria or 4
+local NBTW_DEFAULT_CATEGORY_ID = 501
+local NBTW_ENABLE_EXTERNAL_MODULES = false
+local NBTW_MOP_CATEGORIES = {
+    {id = 501, name = "The Jade Forest"},
+    {id = 502, name = "Valley of the Four Winds"},
+    {id = 503, name = "Krasarang Wilds"},
+    {id = 504, name = "Kun-Lai Summit"},
+    {id = 505, name = "Townlong Steppes"},
+    {id = 506, name = "Dread Wastes"},
+    {id = 507, name = "Vale of Eternal Blossoms"},
+    {id = 508, name = "Isle of Thunder"},
+}
 
 if type(Mixin) ~= "function" then
     function Mixin(object, ...)
@@ -39,10 +52,214 @@ local function GetBestMapForUnit(unit)
     return nil
 end
 
-BINDING_HEADER_BTWQUESTS = "나비퀘스트추적기"
+BINDING_HEADER_BTWQUESTS = "nbtw"
 BINDING_NAME_TOGGLE_BTWQUESTS = L["TOGGLE_BTWQUESTS"]
 
 local CreateFramePoolCollection = CreateFramePoolCollection or CreatePoolCollection
+
+local function NBTW_EnsureFrameReady(frame)
+    if not frame then
+        return false
+    end
+
+    if not frame.SelectCategory and BtWQuestsMixin then
+        Mixin(frame, BtWQuestsMixin)
+    end
+
+    if frame.OnLoad and not frame.nbtwManualOnLoad then
+        frame.nbtwManualOnLoad = true
+        local ok, err = pcall(frame.OnLoad, frame)
+        if not ok then
+            print("nbtw onload error: " .. tostring(err))
+        end
+    end
+
+    if frame.OnEvent and not frame.nbtwManualAddonLoaded then
+        frame.nbtwManualAddonLoaded = true
+        local ok, err = pcall(frame.OnEvent, frame, "ADDON_LOADED", addonName or "nbtw")
+        if not ok then
+            print("nbtw init error: " .. tostring(err))
+        end
+    end
+
+    return frame.SelectCategory ~= nil
+end
+
+local function NBTW_OpenCategory(frame, categoryID)
+    if not NBTW_EnsureFrameReady(frame) then
+        print("nbtw: frame is not ready")
+        return
+    end
+
+    local category = BtWQuestsDatabase:GetCategoryByID(categoryID)
+    if not category and BtWQuestsDatabase.LoadCategory then
+        category = BtWQuestsDatabase:LoadCategory(categoryID)
+    end
+    if not category then
+        print("nbtw: category not found - " .. tostring(categoryID))
+        return
+    end
+
+    local panel = frame.NBTWSimpleList
+    if not panel then
+        return
+    end
+
+    panel.title:SetText(category:GetName() or "Pandaria Quests")
+    if panel.subtitle then
+        panel.subtitle:SetText("Select a quest chain")
+    end
+
+    for _, button in ipairs(panel.buttons or {}) do
+        button:Hide()
+    end
+
+    local character = frame.GetCharacter and frame:GetCharacter()
+    local items = category:GetItemList(character, true, false, false, false, false)
+    local shown = 0
+    for _, item in ipairs(items) do
+        local itemType = item:GetType()
+        if itemType == "chain" or itemType == "category" then
+            shown = shown + 1
+            local button = panel.buttons[shown]
+            if not button then
+                button = CreateFrame("Button", nil, panel)
+                button:SetSize(300, 24)
+                if shown == 1 then
+                    button:SetPoint("TOPLEFT", panel.subtitle or panel.title, "BOTTOMLEFT", 0, -18)
+                else
+                    button:SetPoint("TOPLEFT", panel.buttons[shown - 1], "BOTTOMLEFT", 0, -6)
+                end
+                button.bg = button:CreateTexture(nil, "BACKGROUND")
+                button.bg:SetAllPoints()
+                button.border = button:CreateTexture(nil, "BORDER")
+                button.border:SetPoint("TOPLEFT", -1, 1)
+                button.border:SetPoint("BOTTOMRIGHT", 1, -1)
+                button.border:SetTexture(0.9, 0.8, 0.45, 0.35)
+                button.text = button:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+                button.text:SetPoint("CENTER")
+                button:SetFrameLevel(panel:GetFrameLevel() + 1)
+                button:RegisterForClicks("AnyDown", "AnyUp")
+                button:SetScript("OnEnter", function(self)
+                    self.bg:SetTexture(0.65, 0.03, 0.03, 1)
+                end)
+                button:SetScript("OnLeave", function(self)
+                    self.bg:SetTexture(0.45, 0.02, 0.02, 0.95)
+                end)
+                panel.buttons[shown] = button
+            end
+
+            button.bg:SetTexture(0.45, 0.02, 0.02, 0.95)
+            button.text:SetText(item:GetName(character))
+            button.targetType = itemType
+            button.targetID = item:GetID()
+            button:SetScript("OnMouseUp", function(self)
+                local owner = self:GetParent().owner
+                if self.targetType == "chain" then
+                    self:GetParent():Hide()
+                    local ok, err = pcall(owner.SelectChain, owner, self.targetID, nil, true)
+                    if not ok then
+                        print("nbtw chain error: " .. tostring(self.targetID) .. " / " .. tostring(err))
+                        self:GetParent():Show()
+                    end
+                else
+                    NBTW_OpenCategory(owner, self.targetID)
+                end
+            end)
+            button:Show()
+        end
+    end
+
+    if shown == 0 then
+        print("nbtw: no chains in category - " .. tostring(categoryID))
+    end
+end
+
+local function NBTW_ShowSimplePandariaList(frame)
+    if not frame then
+        return
+    end
+
+    if frame.Chain then
+        frame.Chain:Hide()
+    end
+    if frame.Category then
+        frame.Category:Hide()
+    end
+    if frame.ExpansionList then
+        frame.ExpansionList:Hide()
+    end
+
+    if not frame.NBTWSimpleList then
+        local panel = CreateFrame("Frame", nil, UIParent)
+        panel:SetFrameStrata("DIALOG")
+        panel:SetFrameLevel(900)
+        panel:SetPoint("TOPLEFT", frame.Inset or frame, "TOPLEFT", 18, -24)
+        panel:SetPoint("BOTTOMRIGHT", frame.Inset or frame, "BOTTOMRIGHT", -18, 18)
+        panel:EnableMouse(false)
+        panel.owner = frame
+
+        panel.title = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+        panel.title:SetPoint("TOPLEFT", 0, -4)
+        panel.title:SetText("Pandaria Quests")
+
+        panel.subtitle = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        panel.subtitle:SetPoint("TOPLEFT", panel.title, "BOTTOMLEFT", 0, -8)
+        panel.subtitle:SetText("Select a zone")
+
+        panel.buttons = {}
+        for index, info in ipairs(NBTW_MOP_CATEGORIES) do
+            local button = CreateFrame("Button", nil, panel)
+            button:SetSize(240, 28)
+            if index == 1 then
+                button:SetPoint("TOPLEFT", panel.subtitle, "BOTTOMLEFT", 0, -18)
+            else
+                button:SetPoint("TOPLEFT", panel.buttons[index - 1], "BOTTOMLEFT", 0, -8)
+            end
+            button.bg = button:CreateTexture(nil, "BACKGROUND")
+            button.bg:SetAllPoints()
+            button.bg:SetTexture(0.45, 0.02, 0.02, 0.95)
+            button.border = button:CreateTexture(nil, "BORDER")
+            button.border:SetPoint("TOPLEFT", -1, 1)
+            button.border:SetPoint("BOTTOMRIGHT", 1, -1)
+            button.border:SetTexture(0.9, 0.8, 0.45, 0.35)
+            button.text = button:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            button.text:SetPoint("CENTER")
+            button.text:SetText(info.name)
+            button.categoryID = info.id
+            button:SetFrameLevel(panel:GetFrameLevel() + 1)
+            button:RegisterForClicks("AnyDown", "AnyUp")
+            button:SetScript("OnEnter", function(self)
+                self.bg:SetTexture(0.65, 0.03, 0.03, 1)
+            end)
+            button:SetScript("OnLeave", function(self)
+                self.bg:SetTexture(0.45, 0.02, 0.02, 0.95)
+            end)
+            button:SetScript("OnMouseUp", function(self)
+                NBTW_OpenCategory(self:GetParent().owner, self.categoryID)
+            end)
+            panel.buttons[index] = button
+        end
+
+        frame.NBTWSimpleList = panel
+    end
+
+    frame.NBTWSimpleList:ClearAllPoints()
+    frame.NBTWSimpleList:SetPoint("TOPLEFT", frame.Inset or frame, "TOPLEFT", 18, -24)
+    frame.NBTWSimpleList:SetPoint("BOTTOMRIGHT", frame.Inset or frame, "BOTTOMRIGHT", -18, 18)
+    frame.NBTWSimpleList.owner = frame
+    frame.NBTWSimpleList:Show()
+end
+
+local function NBTW_OpenDefaultView(frame)
+    if not frame then
+        return
+    end
+
+    NBTW_EnsureFrameReady(frame)
+    frame:Show()
+    NBTW_ShowSimplePandariaList(frame)
+end
 local GetLogIndexForQuestID = C_QuestLog and C_QuestLog.GetLogIndexForQuestID or GetQuestLogIndexByID
 local IsQuestComplete = C_QuestLog and C_QuestLog.IsComplete or IsQuestComplete
 local GetQuestIDForQuestIndex = C_QuestLog and C_QuestLog.GetInfo and function (questLogIndex)
@@ -401,6 +618,9 @@ function BtWQuestsMixin:SelectCategory(id, scrollTo, noHistory)
 
     self:SetCategory(id)
     self.navBar:SetCategory(id)
+    if self.NBTWSimpleList then
+        self.NBTWSimpleList:Hide()
+    end
 
     self:DisplayCurrentCategory(scrollTo)
 
@@ -433,6 +653,9 @@ function BtWQuestsMixin:SelectChain(id, scrollTo, noHistory)
 
     self:SetChain(id)
     self.navBar:SetChain(id)
+    if self.NBTWSimpleList then
+        self.NBTWSimpleList:Hide()
+    end
 
     self:DisplayCurrentChain(scrollTo)
 
@@ -617,49 +840,7 @@ function BtWQuestsMixin:LoadExpansion(id)
     self:Refresh()
 end
 function BtWQuestsMixin:DisplayExpansionList(scrollTo)
-	self.Chain:Hide()
-	self.Category:Hide()
-    self.ExpansionList:Show()
-
-    local character = self:GetCharacter();
-    local items = BtWQuestsDatabase:GetExpansionList()
-
-    if self.ExpansionScroll == nil then
-        self.ExpansionScroll = #items - 2
-    end
-
-    if self.ExpansionScroll > #items - 2 then
-        self.ExpansionScroll = #items - 2
-    end
-    if self.ExpansionScroll < 1 then
-        self.ExpansionScroll = 1
-    end
-
-    self.ExpansionList.Left:SetEnabled(not (self.ExpansionScroll == 1))
-    self.ExpansionList.Right:SetEnabled(not (self.ExpansionScroll == #items - 2))
-
-    for i=1,3 do
-        local item = items[self.ExpansionScroll - 1 + i]
-        local expansion = self.ExpansionList.Expansions[i]
-        if item ~= nil then
-            expansion:Set(item, character)
-            expansion:Show()
-        else
-            expansion:Hide()
-        end
-    end
-
-    local source = self.ExpansionList.Expansions[1]
-    if #items == 1 then
-        source:ClearAllPoints()
-        source:SetPoint("BOTTOM", 0, 7)
-    elseif #items == 2 then
-        source:ClearAllPoints()
-        source:SetPoint("BOTTOMRIGHT", self.ExpansionList, "BOTTOM", 0, 7)
-    else
-        source:ClearAllPoints()
-        source:SetPoint("BOTTOMLEFT", 48, 7)
-    end
+    NBTW_ShowSimplePandariaList(self)
 end
 function BtWQuestsMixin:DisplayItemList(items, scrollTo)
     local gridView = BtWQuests.Settings.gridView
@@ -672,6 +853,9 @@ function BtWQuestsMixin:DisplayItemList(items, scrollTo)
 
 	self.Chain:Hide();
     self.ExpansionList:Hide()
+    if self.NBTWSimpleList then
+        self.NBTWSimpleList:Hide()
+    end
 	questSelect:Show();
 
 	local scrollFrame = questSelect.Scroll.Child;
@@ -923,7 +1107,8 @@ function BtWQuestsMixin:OnEvent(event, ...)
             BtWQuests_AutoLoad = BtWQuests_AutoLoad or {}
 
             for i=1,GetNumAddOns() do
-                if GetAddOnMetadata(i, "X-BtWQuests") and IsAddOnLoadOnDemand(i) and GetAddOnEnableState((UnitName("player")), i) ~= 0 then -- One of our child addons
+                -- nbtw is a standalone MoP package; ignore external BtWQuests LoD modules.
+                if NBTW_ENABLE_EXTERNAL_MODULES and GetAddOnMetadata(i, "X-BtWQuests") and IsAddOnLoadOnDemand(i) and GetAddOnEnableState((UnitName("player")), i) ~= 0 then -- One of our child addons
                     local name, title, notes, loadable, reason, security, newVersion = GetAddOnInfo(i)
                     local id = tonumber(GetAddOnMetadata(name, "X-BtWQuests-Expansion"))
 
@@ -1093,8 +1278,13 @@ function BtWQuestsMixin:Refresh()
     elseif self:GetExpansion() ~= nil then
         self:SelectExpansion(self:GetExpansion(), nil, true)
     else
-        self.navBar:Reset()
-        self:DisplayExpansionList(false)
+        local expansion = BtWQuestsDatabase:GetExpansionByID(NBTW_MOP_EXPANSION_ID)
+        if expansion then
+            self:SelectExpansion(NBTW_MOP_EXPANSION_ID, false, true)
+        else
+            self.navBar:Reset()
+            self:DisplayExpansionList(false)
+        end
     end
 end
 function BtWQuestsMixin:OnShow()
@@ -1108,6 +1298,11 @@ function BtWQuestsMixin:OnShow()
         self.navBar:EnableExpansions(BtWQuestsDatabase:HasMultipleExpansion())
 
         if self:GetExpansion() == nil then -- Not guessed/set an expansion yet
+            local mopExpansion = BtWQuestsDatabase:GetExpansionByID(NBTW_MOP_EXPANSION_ID)
+            if mopExpansion then
+                mopExpansion:Load()
+                self:SelectExpansion(NBTW_MOP_EXPANSION_ID, nil, true)
+            else
             local expansion = BtWQuestsDatabase:GetLoadedExpansion()
             if expansion then
                 self:SelectExpansion(expansion:GetID(), nil, true)
@@ -1118,6 +1313,7 @@ function BtWQuestsMixin:OnShow()
                 else
                     print(format(L["BTWQUESTS_NO_EXPANSION_ERROR"], "BtWQuests: The War Within"))
                 end
+            end
             end
         end
 
@@ -1136,7 +1332,12 @@ function BtWQuestsMixin:OnShow()
         elseif self:GetExpansion() ~= nil then
             self:DisplayCurrentExpansion()
         else
-            self:DisplayExpansionList()
+            local expansion = BtWQuestsDatabase:GetExpansionByID(NBTW_MOP_EXPANSION_ID)
+            if expansion then
+                self:SelectExpansion(NBTW_MOP_EXPANSION_ID, nil, true)
+            else
+                self:DisplayExpansionList()
+            end
         end
     end
 end
@@ -1248,17 +1449,36 @@ function BtWQuests_AddOpenChainMenuItem(owner, rootDescription, questID)
 end
 
 -- [[ Slash Command ]]
-SLASH_BTWQUESTS1 = "/nbtw"
-SlashCmdList["BTWQUESTS"] = function(msg)
-    if msg == "minimap" then
-        BtWQuestsMinimapButton_Toggle()
-    else
-        if BtWQuestsFrame:IsShown() then
-            BtWQuestsFrame:Hide()
-        else
-            BtWQuestsFrame:Show()
-        end
+local function BtWQuests_ToggleFrame()
+    if not BtWQuestsFrame then
+        print("nbtw: frame is not ready")
+        return
     end
+
+    if BtWQuestsFrame:IsShown() then
+        BtWQuestsFrame:Hide()
+    else
+        NBTW_OpenDefaultView(BtWQuestsFrame)
+    end
+end
+
+local function BtWQuests_HandleSlash(msg)
+    msg = (msg or ""):lower()
+    if msg == "minimap" then
+        if BtWQuestsMinimapButton_Toggle then
+            BtWQuestsMinimapButton_Toggle()
+        else
+            print("nbtw: minimap button is not ready")
+        end
+    else
+        BtWQuests_ToggleFrame()
+    end
+end
+
+SLASH_BTWQUESTS1 = "/nbtwmain"
+SlashCmdList["BTWQUESTS"] = function(msg)
+    local ok, err = pcall(BtWQuests_HandleSlash, msg)
+    if not ok then print("nbtw error: " .. tostring(err)) end
 end
 
 

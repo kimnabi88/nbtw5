@@ -91,7 +91,19 @@ local BtWQuestsCharactersMap = {} -- Map from name-realm to Character Mixin
 
 local ClassMap = {}
 for classID=1,GetNumClasses() do
-    local info = C_CreatureInfo.GetClassInfo(classID)
+    local info
+    if C_CreatureInfo and C_CreatureInfo.GetClassInfo then
+        info = C_CreatureInfo.GetClassInfo(classID)
+    else
+        local className, classFile, id = GetClassInfo(classID)
+        if className then
+            info = {
+                className = className,
+                classFile = classFile,
+                classID = id or classID,
+            }
+        end
+    end
     if info then
         ClassMap[info.classFile] = info
         ClassMap[info.classID] = info

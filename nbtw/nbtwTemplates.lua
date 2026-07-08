@@ -1,5 +1,6 @@
 local L = BtWQuests.L;
 BTWQUESTS_VIEW_ALL = L["BTWQUESTS_VIEW_ALL"];
+LOAD_ADDON = L["LOAD_ADDON"] or "불러오기";
 
 local min = math.min;
 local max = math.max;
@@ -12,9 +13,9 @@ local CHAIN_GRID_HORIZONTAL_PADDING = 99;
 local CHAIN_GRID_VERTICAL_PADDING = 52 + (CHAIN_GRID_VERTICAL_SIZE * 2);
 
 --@REMOVE AFTER 9.0
-local GetLogIndexForQuestID = C_QuestLog.GetLogIndexForQuestID
-local IsQuestComplete = C_QuestLog.IsComplete
-local IsQuestFailed = C_QuestLog.IsFailed
+local GetLogIndexForQuestID = C_QuestLog and C_QuestLog.GetLogIndexForQuestID or GetQuestLogIndexByID
+local IsQuestComplete = C_QuestLog and C_QuestLog.IsComplete
+local IsQuestFailed = C_QuestLog and C_QuestLog.IsFailed
 if select(4, GetBuildInfo()) < 90000 then
     GetLogIndexForQuestID = GetQuestLogIndexByID
     function IsQuestComplete(questLogIndex)
@@ -776,13 +777,15 @@ function BtWQuestsExpansionMixin:Set(item, character)
     self.item = item
 
     self.Name:SetText(item:GetName())
+    self.ViewAll:SetText(L["BTWQUESTS_VIEW_ALL"] or "모두 보기")
+    self.Load:SetText(L["LOAD_ADDON"] or "불러오기")
 
     local texture, left, right, top, bottom = item:GetImage()
     if texture ~= nil then
         self.Background:SetTexture(texture)
         self.Background:SetTexCoord(left, right, top, bottom)
     else
-        self.Background:SetTexture("Interface\\Addons\\BtWQuests\\UI-Expansion")
+        self.Background:SetTexture("Interface\\Buttons\\WHITE8X8")
         self.Background:SetTexCoord(0.43359375, 0.66015625, 0.0, 0.8125)
     end
 
@@ -1741,7 +1744,7 @@ function BtWQuestsTooltipMixin:SetChain(chainID, character)
 
     self:Show();
 end
-local IsUnitOnQuest = C_QuestLog.IsUnitOnQuest
+local IsUnitOnQuest = C_QuestLog and C_QuestLog.IsUnitOnQuest
 if not IsUnitOnQuest then
     function IsUnitOnQuest(unit, questID)
         return IsUnitOnQuestByQuestID(questID, unit)

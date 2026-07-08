@@ -17,10 +17,10 @@ local IsAddOnLoaded = C_AddOns and C_AddOns.IsAddOnLoaded or IsAddOnLoaded;
 local LE_EXPANSION_LEVEL_CURRENT = LE_EXPANSION_LEVEL_CURRENT or 0;
 
 --@REMOVE AFTER 9.0
-local GetLogIndexForQuestID = C_QuestLog.GetLogIndexForQuestID
-local GetQuestWatchType = C_QuestLog.GetQuestWatchType
-local AddQuestWatch = C_QuestLog.AddQuestWatch
-local RemoveQuestWatch = C_QuestLog.RemoveQuestWatch
+local GetLogIndexForQuestID = C_QuestLog and C_QuestLog.GetLogIndexForQuestID or GetQuestLogIndexByID
+local GetQuestWatchType = C_QuestLog and C_QuestLog.GetQuestWatchType
+local AddQuestWatch = C_QuestLog and C_QuestLog.AddQuestWatch or AddQuestWatchForQuestID
+local RemoveQuestWatch = C_QuestLog and C_QuestLog.RemoveQuestWatch or RemoveQuestWatchForQuestID
 if INTERFACE_NUMBER < 90000 then
     GetLogIndexForQuestID = GetQuestLogIndexByID
     function GetQuestWatchType(questID)
@@ -2200,9 +2200,31 @@ function ExperienceItemMixin:IsCompleted(database, item, character)
     return false
 end
 
+local function GetNbtwRaceInfo(id)
+    if C_CreatureInfo and C_CreatureInfo.GetRaceInfo then
+        return C_CreatureInfo.GetRaceInfo(id)
+    end
+end
+
+local function GetNbtwClassInfo(id)
+    if C_CreatureInfo and C_CreatureInfo.GetClassInfo then
+        return C_CreatureInfo.GetClassInfo(id)
+    end
+    if GetClassInfo then
+        local className, classFile, classID = GetClassInfo(id)
+        if className then
+            return {
+                className = className,
+                classFile = classFile,
+                classID = classID or id,
+            }
+        end
+    end
+end
+
 local Races = {}
 for i=1,100 do
-    local race = C_CreatureInfo.GetRaceInfo(i);
+    local race = GetNbtwRaceInfo(i);
     if race then
         Races[race.clientFileString] = race
     end
@@ -2213,12 +2235,12 @@ function RaceItemMixin:GetName(database, item, character, variation)
     if item.name then
         name = ItemMixin.GetName(self, database, item, character);
     elseif item.id then
-        local race = Races[item.id] or C_CreatureInfo.GetRaceInfo(item.id);
+        local race = Races[item.id] or GetNbtwRaceInfo(item.id);
         name = race and race.raceName
     elseif item.ids then
         local names = {};
-        for id in ipairs(item.ids) do
-            local race = Races[id] or C_CreatureInfo.GetRaceInfo(id);
+        for _, id in ipairs(item.ids) do
+            local race = Races[id] or GetNbtwRaceInfo(id);
             if race and race.raceName then
                 names[#names+1] = race.raceName
             end
@@ -2247,12 +2269,12 @@ function ClassItemMixin:GetName(database, item, character, variation)
     if item.name then
         name = ItemMixin.GetName(self, database, item, character);
     elseif item.id then
-        local class = C_CreatureInfo.GetClassInfo(item.id);
+        local class = GetNbtwClassInfo(item.id);
         name = class and class.className
     elseif item.ids then
         local names = {};
-        for id in ipairs(item.ids) do
-            local class = C_CreatureInfo.GetClassInfo(id);
+        for _, id in ipairs(item.ids) do
+            local class = GetNbtwClassInfo(id);
             if class and class.className then
                 names[#names+1] = class.className
             end
@@ -3828,10 +3850,16 @@ function BtWQuests_GetAchievementCriteriaFullNameDelayed(achievementID, criteria
 end
 
 function BtWQuests.GetAreaName(areaID)
-    return C_Map.GetAreaInfo(areaID)
+    if C_Map and C_Map.GetAreaInfo then
+        return C_Map.GetAreaInfo(areaID)
+    end
+    return GetMapNameByID and GetMapNameByID(areaID) or ("Area " .. tostring(areaID))
 end
 function BtWQuests.GetMapName(mapID)
-    return ((C_Map.GetMapInfo(mapID) or {}).name or "Unnamed")
+    if C_Map and C_Map.GetMapInfo then
+        return ((C_Map.GetMapInfo(mapID) or {}).name or "Unnamed")
+    end
+    return GetMapNameByID and GetMapNameByID(mapID) or ("Map " .. tostring(mapID))
 end
 BtWQuests_GetAreaName = BtWQuests.GetAreaName;
 BtWQuests_GetMapName = BtWQuests.GetMapName;

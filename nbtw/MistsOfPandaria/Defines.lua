@@ -26,9 +26,5 @@ Chain.IsleOfThunder = {}
 BtWQuests.Database:AddExpansion(BtWQuests.Constant.Expansions.MistsOfPandaria, {
     background = {
         texture = "Interface\\EncounterJournal\\UI-EJ-MistsofPandaria"
-    },
-    image = {
-        texture = "Interface\\AddOns\\nbtw\\MistsOfPandaria\\UI-Expansion",
-        texCoords = {0, 0.90625, 0, 0.8125}
     }
 })
